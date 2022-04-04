@@ -1,7 +1,8 @@
 from __future__ import annotations
-
+from django.utils import timezone
 from .notifiers import Notifier
 from .repositories import JourneyRepository
+from .models import Journey
 
 
 class StartJourney:
@@ -13,7 +14,7 @@ class StartJourney:
         self.data = data
         return self
 
-    def execute(self) -> None:
+    def execute(self) -> Journey:
         car = self.repository.get_or_create_car()
         vehicle = self.repository.create_vehicle(vehicle_type=car, **self.data)
         if not vehicle.can_start():
@@ -25,3 +26,12 @@ class StartJourney:
 
     class CantStart(Exception):
         pass
+
+
+class StopJourney:
+    def __init__(self, journey: Journey):
+        self.journey = journey
+
+    def execute(self) -> Journey:
+        self.journey.end = timezone.now().date()
+        return self.journey
